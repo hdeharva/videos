@@ -1,8 +1,10 @@
 package org.vaadin.example;
 
+import com.nimbusds.jose.shaded.gson.Gson;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.charts.model.Select;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -65,30 +67,42 @@ public class MainView extends HorizontalLayout {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        return response.body();
     }
 
-    public MainView(@Autowired GreetService service) {
+    public MainView() {
 
-        // Use TextField for standard text input
-        TextField textField = new TextField("Your name");
-        textField.addThemeName("bordered");
+        final Gson gson = new Gson();
+        HorizontalLayout mainLeft = new HorizontalLayout();
+        HorizontalLayout mainRight = new HorizontalLayout();
 
-        // Button click listeners can be defined as lambda expressions
-        Button button = new Button("Say hello",
-                e -> Notification.show(service.greet(textField.getValue())));
+        mainRight.setPadding(true);
 
-        // Theme variants give you predefined extra styles for components.
-        // Example: Primary button has a more prominent look.
-        button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        HorizontalLayout horizontalLayout = new HorizontalLayout();
 
-        // You can specify keyboard shortcuts for buttons.
-        // Example: Pressing enter in this view clicks the Button.
-        button.addClickShortcut(Key.ENTER);
+        Select<String> valueSelect = new Select<>();
+        valueSelect.setItems("people", "planets", "starships");
+        valueSelect.setPlaceholder("Elige un tipo de recurso:");
 
-        // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
-        addClassName("centered-content");
+        TextField placeholderField = new TextField();
+        placeholderField.setPlaceholder("Introduzca el id del recurso:");
 
-        add(textField, button);
+        horizontalLayout.add(valueSelect, placeholderField);
+
+        Button button = new Button("Obtener",
+                event -> {
+                    String resource = valueSelect.getValue();
+                    String id = placeholderField.getValue();
+                    String response = getCharacter(resource, id);
+
+                    Character character = gson.fromJson(response, Character.class);
+
+                    mainRight.add(character.getName());
+                });
+
+        mainLeft.add(horizontalLayout, button);
+        add(mainLeft, mainRight);
     }
 
 }
